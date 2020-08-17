@@ -52,17 +52,13 @@ for resource in df_resources["resource_key"]:
     print(dict_cnt)
 df_resources["level_y"] = df_resources["resource_key"].map(dict_cnt)
 
-df_resources["level_x"] = (
-    df_resources.sort_values(["resource_key"], ascending=False)
-    .groupby(["level_y"])
-    .cumcount()
-)
+df_resources["level_x"] = df_resources.groupby(["level_y"]).cumcount()
 print(tabulate(df_result, headers="keys", tablefmt="psql"))
 print(tabulate(df_resources, headers="keys", tablefmt="psql"))
 
 
 def calc_pos(
-    size=(250, 70), lvl=(0, 0), object_distance=(100, 300), start_pos=(10, 10)
+    size=(250, 70), lvl=(0, 0), object_distance=(100, 200), start_pos=(10, 10)
 ):
     x = start_pos[0] + size[0] * lvl[0] + object_distance[0] * lvl[0]
     y = start_pos[1] + size[1] * lvl[1] + object_distance[1] * lvl[1]
@@ -75,7 +71,7 @@ def calc_text_in_rect(position, size, text, text_factor):
     return (x, y)
 
 
-dwg = svgwrite.Drawing("test.svg", profile="tiny")
+dwg = svgwrite.Drawing("test.svg", profile="tiny", viewBox=("0 0 2000 1000"))
 
 rect_size = (450, 70)
 start_position = (50, 50)
@@ -89,6 +85,8 @@ for index, row in df_resources.iterrows():
     )
 
 for rect_text, rect_p in dict_rect.items():
+    print(rect_text)
+    print(rect_p)
     rect = dwg.rect(
         insert=rect_p,
         size=rect_size,
@@ -103,3 +101,9 @@ for rect_text, rect_p in dict_rect.items():
 
 # write svg file to disk
 dwg.save()
+
+from svglib.svglib import svg2rlg
+from reportlab.graphics import renderPDF, renderPM
+
+drawing = svg2rlg("test.svg")
+renderPM.drawToFile(drawing, "test.png", fmt="PNG")
